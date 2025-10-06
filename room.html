@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Room Shuffler</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background-color: #f4f4f4;
+        }
+        h1 {
+            text-align: center;
+        }
+        input, textarea, button {
+            margin: 5px 0;
+            padding: 8px;
+            width: 100%;
+            box-sizing: border-box;
+        }
+        .container {
+            max-width: 600px;
+            margin: auto;
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px #ccc;
+        }
+        .room-list {
+            margin-top: 10px;
+        }
+        .allocation {
+            margin-top: 20px;
+            background: #e3f2fd;
+            padding: 10px;
+            border-radius: 8px;
+        }
+        .allocation h3 {
+            margin: 0 0 5px 0;
+        }
+
+    header {
+      background-color: #004080;
+      color: #fff;
+      padding: 20px 0;
+      text-align: center;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    header h1 {
+      font-size: 2rem;
+      margin-bottom: 10px;
+    }
+
+    nav {
+      display: flex;
+      justify-content: center;
+      gap: 30px;
+      margin-top: 10px;
+    }
+
+    nav a {
+      color: #fff;
+      text-decoration: none;
+      font-weight: 500;
+      padding: 8px 15px;
+      border-radius: 5px;
+      transition: background-color 0.3s, color 0.3s;
+    }
+
+    nav a:hover {
+      background-color: #fff;
+      color: #004080;
+    }
+
+    main {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: calc(100vh - 120px); /* Full viewport minus header height */
+      text-align: center;
+      padding: 20px;
+    }
+
+    main h2 {
+      font-size: 2rem;
+      margin-bottom: 15px;
+      color: #004080;
+    }
+
+    main p {
+      font-size: 1.1rem;
+      color: #555;
+    }
+
+    @media (max-width: 600px) {
+      nav {
+        flex-direction: column;
+        gap: 15px;
+      }
+
+      main h2 {
+        font-size: 1.5rem;
+      }
+
+      main p {
+        font-size: 1rem;
+      }
+    }
+    </style>
+</head>
+<body>
+    <div class="container">
+         <header>
+    <h1>🏫 Campus Operations Platform</h1>
+    <nav>
+      <a href="index.html">Home</a>
+      <a href="bmi.html">BMI Checkup</a>
+      <a href="room.html">Room Suffiling</a>
+    </nav>
+  </header>
+        <h1>Student Room Shuffler</h1>
+
+        <h3>Add Rooms</h3>
+        <input type="text" id="roomNumber" placeholder="Room Number">
+        <input type="number" id="roomCapacity" placeholder="Capacity">
+        <button onclick="addRoom()">Add Room</button>
+
+        <div class="room-list" id="roomList"></div>
+
+        <h3>Paste Students (one per line)</h3>
+        <textarea id="studentsInput" rows="6" placeholder="Student names..."></textarea>
+
+        <button onclick="shuffleRooms()">Assign Students</button>
+
+        <div class="allocation" id="allocation"></div>
+    </div>
+
+    <script>
+        let rooms = [];
+
+        function addRoom() {
+            const roomNumber = document.getElementById('roomNumber').value.trim();
+            const roomCapacity = parseInt(document.getElementById('roomCapacity').value);
+
+            if(roomNumber === "" || isNaN(roomCapacity) || roomCapacity <= 0){
+                alert("Please enter valid room number and capacity");
+                return;
+            }
+
+            rooms.push({number: roomNumber, capacity: roomCapacity, students: []});
+            document.getElementById('roomNumber').value = '';
+            document.getElementById('roomCapacity').value = '';
+            displayRooms();
+        }
+
+        function displayRooms() {
+            const roomList = document.getElementById('roomList');
+            roomList.innerHTML = "<h4>Rooms:</h4>";
+            rooms.forEach(room => {
+                roomList.innerHTML += `Room ${room.number} (Capacity: ${room.capacity})<br>`;
+            });
+        }
+
+        function shuffleRooms() {
+            const studentsText = document.getElementById('studentsInput').value.trim();
+            if(studentsText === ""){
+                alert("Please enter student names");
+                return;
+            }
+
+            let students = studentsText.split('\n').map(s => s.trim()).filter(s => s !== "");
+            students = shuffleArray(students); // Randomize student order
+
+            // Reset students in rooms
+            rooms.forEach(room => room.students = []);
+
+            // Assign students to rooms
+            for(let room of rooms){
+                const assigned = students.splice(0, room.capacity);
+                room.students = assigned;
+            }
+
+            displayAllocation(students);
+        }
+
+        function displayAllocation(leftover) {
+            const allocationDiv = document.getElementById('allocation');
+            allocationDiv.innerHTML = "<h3>Room Allocation:</h3>";
+            rooms.forEach(room => {
+                allocationDiv.innerHTML += `<strong>Room ${room.number}:</strong><br>`;
+                if(room.students.length === 0){
+                    allocationDiv.innerHTML += "No students assigned<br>";
+                } else {
+                    room.students.forEach(student => {
+                        allocationDiv.innerHTML += `- ${student}<br>`;
+                    });
+                }
+                allocationDiv.innerHTML += "<br>";
+            });
+
+            if(leftover.length > 0){
+                allocationDiv.innerHTML += "<strong>Unassigned Students:</strong><br>";
+                leftover.forEach(student => {
+                    allocationDiv.innerHTML += `- ${student}<br>`;
+                });
+            }
+        }
+
+        // Fisher-Yates shuffle
+        function shuffleArray(array) {
+            for(let i = array.length - 1; i > 0; i--){
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+            return array;
+        }
+    </script>
+</body>
+</html>
